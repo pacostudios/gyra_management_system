@@ -2,19 +2,27 @@
 
 Status per step. Update at the end of every session.
 
-| Step | Item                                                                 | Status                             |
-| ---- | -------------------------------------------------------------------- | ---------------------------------- |
-| 0    | CLAUDE.md, rules, ADRs, skills, review agents                        | Done                               |
-| 1    | Open decisions                                                       | Partly decided (below)             |
-| 2    | Architecture + folder structure ([architecture.md](architecture.md)) | Approved (frontend/backend/shared) |
-| 3.1  | S1: root tooling, folder structure in gyra/, test folders + Vitest   | Done — committed (05fc27f)         |
-| 3.2  | S2: compose.yml with postgres, redis, mailpit (storage deferred)     | Done                               |
-| 3.3  | S3: shared + backend skeleton, Swagger at /api/docs                  | Done                               |
-| 3.4  | S4: frontend skeleton                                                | Not started                        |
-| 3.5  | S5: Dockerfiles + full stack in compose.yml                          | Not started                        |
-| —    | Deployment (reverse proxy, CI/CD, AWS)                               | Deferred until before first deploy |
-| 4    | Specs for intermediate milestone: auth, org, institutes, projects    | Not started                        |
-| 5+   | Modules (spec → plan → slices → review → staging)                    | Not started                        |
+| Step | Item                                                                 | Status                              |
+| ---- | -------------------------------------------------------------------- | ----------------------------------- |
+| 0    | CLAUDE.md, rules, ADRs, skills, review agents                        | Done                                |
+| 1    | Open decisions                                                       | Partly decided (below)              |
+| 2    | Architecture + folder structure ([architecture.md](architecture.md)) | Approved (frontend/backend/shared)  |
+| 3.1  | S1: root tooling, folder structure in gyra/, test folders + Vitest   | Done — committed (05fc27f)          |
+| 3.2  | S2: compose.yml with postgres, redis, mailpit (storage deferred)     | Done — committed (f86acad)          |
+| 3.3  | S3: shared + backend skeleton, Swagger at /api/docs                  | Done — committed (c4ce9db, 44271a0) |
+| 3.4  | S4: frontend skeleton                                                | Not started                         |
+| 3.5  | S5: Dockerfiles + full stack in compose.yml                          | Not started                         |
+| —    | Deployment (reverse proxy, CI/CD, AWS)                               | Deferred until before first deploy  |
+| 4    | Specs for intermediate milestone: auth, org, institutes, projects    | Not started                         |
+| 5+   | Modules (spec → plan → slices → review → staging)                    | Not started                         |
+
+## Checkpoint — 2026-10-25 (tag `checkpoint-s3`, branch `development`)
+
+- Working: `docker compose up --watch` from `gyra/` runs postgres, redis, mailpit, backend, worker; all healthy. Live reload on save verified. API on :4000, Swagger at `/api/docs`, `/readyz` ok.
+- `pnpm check` passes: 37 backend tests (unit + integration), 6 shared tests.
+- Branches: `main` = S1 only; `development` = S1–S3 (pushed). Not merged to `main` yet.
+- Local notes: Redis host port is 6380 in `gyra/.env` (a WSL Redis holds 6379). `.env` deny rules were removed from `.claude/settings.local.json` for now; restore `Read(./.env)` and `Read(./.env.*)` before real keys go in.
+- **Next:** S4 — frontend skeleton (Next.js, Tailwind, shadcn, `(auth)`/`(app)` placeholders, `/api` rewrite to backend, Vitest + Testing Library, dev Docker stage + watch).
 
 ## Decisions
 
