@@ -1,0 +1,2 @@
+cd gyra
+pnpm exec commitlint --edit "$1"

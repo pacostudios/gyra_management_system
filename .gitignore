@@ -1,0 +1,40 @@
+# Contract documents (confidential, MoU 10)
+Mou/
+
+# Skills CLI lock file
+skills-lock.json
+
+# Personal Claude Code settings
+.claude/settings.local.json
+
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+.next/
+out/
+*.tsbuildinfo
+next-env.d.ts
+
+# Tests
+coverage/
+playwright-report/
+test-results/
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
