@@ -1,0 +1,35 @@
+# Base services shared by every environment. Run from gyra/:
+#   Local:  docker compose up -d --wait
+#           (Compose also loads compose.override.yml: local postgres, mailpit, host ports)
+#   Server: docker compose -f compose.yml -f compose.prod.yml up -d --wait
+#           (no override file: postgres is RDS, email is SES, nothing published to the host)
+
+name: gyra
+
+services:
+  redis:
+    image: redis:8.8.3-alpine
+    restart: unless-stopped
+    # AOF persistence + password. BullMQ requires noeviction so queued jobs are never dropped.
+    command:
+      [
+        "redis-server",
+        "--appendonly",
+        "yes",
+        "--maxmemory-policy",
+        "noeviction",
+        "--requirepass",
+        "${REDIS_PASSWORD:?set REDIS_PASSWORD in .env}",
+      ]
+    environment:
+      REDISCLI_AUTH: ${REDIS_PASSWORD:?set REDIS_PASSWORD in .env}
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  redis-data:

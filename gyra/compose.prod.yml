@@ -1,0 +1,16 @@
+# Server overrides. Run from gyra/ on the server:
+#   docker compose -f compose.yml -f compose.prod.yml up -d --wait
+# The server's .env is generated from AWS Secrets Manager / SSM, never copied from .env.example.
+# Postgres (RDS) and email (SES) are managed AWS services, so they are not containers here.
+# No service publishes a host port; the reverse proxy (deferred) will be the only entry point.
+
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "5"
+
+services:
+  redis:
+    restart: always
+    logging: *logging

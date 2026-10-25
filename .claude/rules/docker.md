@@ -16,4 +16,5 @@ paths:
 - Add `HEALTHCHECK` using the app's health endpoints.
 - `.dockerignore` excludes `node_modules`, `.env*`, `.git`, test artifacts.
 - No secrets baked into images or build args; inject at runtime.
-- Root `compose.yml` runs the full local stack: postgres, redis, minio, mailpit, then `migrate` (one-off), `backend`, `worker`, `frontend`. Services have healthchecks and `depends_on: condition: service_healthy` so `docker compose up --build` works in one step.
+- `gyra/compose.yml` holds services shared by every environment (redis, then `migrate` one-off, `backend`, `worker`, `frontend`) with no host ports. `compose.override.yml` is local-only (postgres, mailpit, 127.0.0.1 ports, watch). `compose.prod.yml` is server-only (restart always, log rotation). Never put local stand-ins or host ports in `compose.yml`.
+- Services have healthchecks and `depends_on: condition: service_healthy` so one `up` command starts everything in order.

@@ -7,8 +7,8 @@ Status per step. Update at the end of every session.
 | 0    | CLAUDE.md, rules, ADRs, skills, review agents                        | Done                               |
 | 1    | Open decisions                                                       | Partly decided (below)             |
 | 2    | Architecture + folder structure ([architecture.md](architecture.md)) | Approved (frontend/backend/shared) |
-| 3.1  | S1: root tooling, folder structure in gyra/, test folders + Vitest   | Done — awaiting review/commit      |
-| 3.2  | S2: compose.yml with local services                                  | Not started                        |
+| 3.1  | S1: root tooling, folder structure in gyra/, test folders + Vitest   | Done — committed (05fc27f)         |
+| 3.2  | S2: compose.yml with postgres, redis, mailpit (storage deferred)     | Done                               |
 | 3.3  | S3: shared + backend skeleton                                        | Not started                        |
 | 3.4  | S4: frontend skeleton                                                | Not started                        |
 | 3.5  | S5: Dockerfiles + full stack in compose.yml                          | Not started                        |
@@ -20,6 +20,8 @@ Status per step. Update at the end of every session.
 
 - **Notifications:** polling. No real-time push. (2026-10-25)
 - **Sub-region:** its own entity/level in the hierarchy. Details (fields, whether every region has one) to be specified later. (2026-10-25)
+- **Local dev in Docker:** `docker compose up --watch` (Compose Watch syncs saved files into containers; plain bind mounts miss Windows file events). Host `pnpm dev` stays optional. (2026-10-25)
+- **Local S3 stand-in:** deferred until the files module. MinIO no longer publishes images; RustFS is the likely replacement. Production uses Amazon S3. (2026-10-25)
 
 ## Open
 

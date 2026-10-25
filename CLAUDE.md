@@ -25,7 +25,7 @@ Decisions and their reasons are recorded in [docs/adr/](docs/adr/).
 | Deferred to deploy time  | Reverse proxy (Caddy or load balancer), GitHub Actions CI/CD → ECR                                                                   |
 | Hosting (GYRA-owned AWS) | One EC2 instance (web, api, worker, redis containers), RDS PostgreSQL, S3, SES, CloudFront, CloudWatch, SSM/Secrets Manager          |
 | Monitoring               | Sentry, uptime checks on health endpoints                                                                                            |
-| Local dev services       | Postgres, Redis, MinIO (S3), Mailpit (email) via Docker Compose                                                                      |
+| Local dev services       | Postgres, Redis, RustFS (S3-compatible), Mailpit (email) via Docker Compose                                                                      |
 
 Deferred until load or requirements demand them: ECS Fargate + ALB, ElastiCache, RDS read replica, Postgres row-level security, real-time push (notifications poll).
 
@@ -42,12 +42,12 @@ gyra/
   backend/        Express API + BullMQ worker (same codebase, two entrypoints)
   shared/         @gyra/shared — Zod schemas, types, role/permission constants
   e2e/            Playwright
-  compose.yml     full local stack
+  compose.yml     base services (+ compose.override.yml local, compose.prod.yml server)
   package.json    workspace root scripts
 docs/             architecture.md, specs/, adr/, progress.md
 ```
 
-Running (from `gyra/`): `docker compose up --build` (whole app in Docker) or `pnpm dev` (services in Docker, apps on host with hot reload).
+Running (from `gyra/`): `docker compose up --watch` — the whole app in Docker with live reload on save (Compose Watch syncs `src/` changes into containers; dependency changes trigger a rebuild). Optional host mode: services in Docker, `pnpm dev` on the host. Server: `docker compose -f compose.yml -f compose.prod.yml up -d --wait`.
 
 Checks (from `gyra/`): `pnpm lint`, `pnpm typecheck`, `pnpm test`, or all three with `pnpm check`.
 

@@ -27,7 +27,7 @@ How the GYRA Management System is put together. Decisions behind it are in [adr/
 | `migrate`  | backend image, one-off       | Runs Prisma migrations, then exits                      |
 | `postgres` | postgres image               | Database (RDS in production)                            |
 | `redis`    | redis image                  | Queue, rate limits, caches                              |
-| `minio`    | minio image                  | Local stand-in for S3                                   |
+| `storage`  | rustfs image (deferred)      | Local stand-in for S3, added with the files module      |
 | `mailpit`  | mailpit image                | Local inbox that catches all outgoing email             |
 
 The frontend forwards `/api/*` to the backend, so the browser sees one origin (no CORS, first-party session cookie). In production a reverse proxy (Caddy or a load balancer) will take over that routing — deferred.
@@ -125,8 +125,16 @@ All commands run from the `gyra/` folder.
 ```bash
 cd gyra
 cp .env.example .env          # first time only
-docker compose up --watch     # postgres, redis, minio, mailpit → migrate → backend, worker, frontend
+docker compose up --watch     # postgres, redis, mailpit → migrate → backend, worker, frontend
 ```
+
+Compose files:
+
+| File                   | Loaded                                    | Contains                                                                                      |
+| ---------------------- | ----------------------------------------- | --------------------------------------------------------------------------------------------- |
+| `compose.yml`          | everywhere                                | base services (redis; later the app services), no host ports                                  |
+| `compose.override.yml` | automatically by `docker compose` locally | local stand-ins (postgres for RDS, mailpit for SES), host ports on 127.0.0.1, watch settings  |
+| `compose.prod.yml`     | only on the server, via `-f`              | restart always, log rotation; no published ports                                              |
 
 Uses [Compose Watch](https://docs.docker.com/compose/how-tos/file-watch/) instead of plain bind mounts, because Windows file-change events don't reach Linux containers through bind mounts:
 
@@ -137,22 +145,23 @@ Uses [Compose Watch](https://docs.docker.com/compose/how-tos/file-watch/) instea
 | `backend/prisma/schema.prisma`    | syncs + restarts backend        | regenerated Prisma client              |
 | any `package.json`, lockfile      | rebuilds that image             | new dependencies installed             |
 
-Database, Redis, and MinIO data live in named volumes and survive restarts.
+Database and Redis data live in named volumes and survive restarts.
 
 - App: http://localhost:3000
 - Mailpit (see sent emails): http://localhost:8025
-- MinIO console: http://localhost:9001
 
-**Production-like run** — built images, no watching:
+If a host port is already taken (e.g. a Redis running in WSL), change it in `.env` (`REDIS_PORT=6380`); containers still talk to each other on the default ports.
+
+**Server** — built images, no watching, no override file. The server's `.env` comes from Secrets Manager / SSM:
 
 ```bash
-docker compose -f compose.yml -f compose.prod.yml up --build
+docker compose -f compose.yml -f compose.prod.yml up -d --wait
 ```
 
 **Host mode (optional)** — apps on the host, services in Docker:
 
 ```bash
-docker compose up -d postgres redis minio mailpit
+docker compose up -d --wait   # postgres, redis, mailpit
 pnpm dev
 ```
 
@@ -310,7 +319,9 @@ The repository root holds project notes only; all code is inside `gyra/`.
     │
     ├── scripts/                          dev helpers (db reset, wait-for-services)
     ├── .husky/                           git hooks (lint + format, commit message)
-    ├── compose.yml                       full local stack: `docker compose up`
+    ├── compose.yml                       base services (all environments)
+    ├── compose.override.yml              local only: postgres, mailpit, host ports (auto-loaded)
+    ├── compose.prod.yml                  server only: restart policy, log rotation
     ├── .env.example                      every variable, no real values
     ├── package.json                      scripts: dev, lint, typecheck, test, check, db:*
     ├── pnpm-workspace.yaml               frontend, backend, shared, e2e
@@ -340,7 +351,7 @@ Current focus is **frontend and backend**, runnable locally and in Docker.
 | Slice | Contents                                                                                                                                                    | Check                                                               |
 | ----- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------- |
 | S1    | Root tooling (pnpm workspace, TS, ESLint, Prettier, Husky, commitlint), folder structure, test folders, Vitest in `shared`                                  | `pnpm check` — done                                                 |
-| S2    | `gyra/compose.yml` with postgres, redis, minio, mailpit (+ healthchecks, named volumes)                                                                     | `docker compose up -d`, all services healthy                        |
+| S2    | `gyra/compose.yml` with postgres, redis, storage, mailpit (+ healthchecks, named volumes)                                                                     | `docker compose up -d`, all services healthy                        |
 | S3    | `backend/` skeleton: env validation, logger, error handler, `/healthz` `/readyz`, Prisma init, Redis + BullMQ wiring, worker entrypoint, Vitest + Supertest | health tests pass against local services                            |
 | S4    | `frontend/` skeleton: Next.js, Tailwind, shadcn init, root layout, `(auth)`/`(app)` placeholders, `/api` rewrite to backend, Vitest + Testing Library       | `pnpm dev`, page renders, `/api/healthz` reachable through frontend |
 | S5    | `frontend/Dockerfile`, `backend/Dockerfile` (multi-stage, non-root), `migrate`/`backend`/`worker`/`frontend` services in `compose.yml`                      | fresh clone → `docker compose up --build` → app on :3000            |
