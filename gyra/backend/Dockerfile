@@ -33,4 +33,5 @@ RUN chown node:node /app/backend /app/shared
 USER node
 WORKDIR /app/backend
 EXPOSE 4000
-CMD ["pnpm", "dev"]
+# npm only runs the script; pnpm would re-verify the (filtered) install and try to reinstall as `node`.
+CMD ["npm", "run", "dev"]

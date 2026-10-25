@@ -47,7 +47,7 @@ services:
 
   worker:
     <<: *backend-dev
-    command: ["pnpm", "dev:worker"]
+    command: ["npm", "run", "dev:worker"]
 
   # Stand-in for RDS
   postgres:
