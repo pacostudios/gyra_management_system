@@ -2,10 +2,52 @@
 # the server never loads it (it passes -f compose.yml -f compose.prod.yml).
 # Every port binds to 127.0.0.1 so nothing is reachable from the network.
 
+x-backend-dev: &backend-dev
+  build:
+    context: .
+    dockerfile: backend/Dockerfile
+    target: dev
+  environment:
+    DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+  depends_on:
+    postgres:
+      condition: service_healthy
+  # `docker compose up --watch`: saved files are copied into the container and tsx restarts.
+  develop:
+    watch:
+      - action: sync
+        path: ./backend/src
+        target: /app/backend/src
+        ignore:
+          - generated/
+      - action: sync
+        path: ./shared/src
+        target: /app/shared/src
+      # Schema changes: copy, then restart so `prisma generate` runs again.
+      - action: sync+restart
+        path: ./backend/prisma
+        target: /app/backend/prisma
+      # Dependency changes: rebuild the image.
+      - action: rebuild
+        path: ./backend/package.json
+      - action: rebuild
+        path: ./shared/package.json
+      - action: rebuild
+        path: ./pnpm-lock.yaml
+
 services:
   redis:
     ports:
       - "127.0.0.1:${REDIS_PORT:-6379}:6379"
+
+  backend:
+    <<: *backend-dev
+    ports:
+      - "127.0.0.1:${BACKEND_PORT:-4000}:4000"
+
+  worker:
+    <<: *backend-dev
+    command: ["pnpm", "dev:worker"]
 
   # Stand-in for RDS
   postgres:

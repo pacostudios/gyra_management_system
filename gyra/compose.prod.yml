@@ -10,7 +10,22 @@ x-logging: &logging
     max-size: "10m"
     max-file: "5"
 
+x-backend-prod: &backend-prod
+  restart: always
+  logging: *logging
+  environment:
+    NODE_ENV: production
+  # Gate: the backend image has no production stage until S5, so these services
+  # must not start on the server yet. S5 adds `build.target: runtime` and removes this.
+  profiles: ["needs-s5-runtime-image"]
+
 services:
   redis:
     restart: always
     logging: *logging
+
+  backend:
+    <<: *backend-prod
+
+  worker:
+    <<: *backend-prod

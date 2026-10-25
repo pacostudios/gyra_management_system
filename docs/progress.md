@@ -9,7 +9,7 @@ Status per step. Update at the end of every session.
 | 2    | Architecture + folder structure ([architecture.md](architecture.md)) | Approved (frontend/backend/shared) |
 | 3.1  | S1: root tooling, folder structure in gyra/, test folders + Vitest   | Done — committed (05fc27f)         |
 | 3.2  | S2: compose.yml with postgres, redis, mailpit (storage deferred)     | Done                               |
-| 3.3  | S3: shared + backend skeleton                                        | Not started                        |
+| 3.3  | S3: shared + backend skeleton, Swagger at /api/docs                  | Done                               |
 | 3.4  | S4: frontend skeleton                                                | Not started                        |
 | 3.5  | S5: Dockerfiles + full stack in compose.yml                          | Not started                        |
 | —    | Deployment (reverse proxy, CI/CD, AWS)                               | Deferred until before first deploy |
@@ -22,8 +22,14 @@ Status per step. Update at the end of every session.
 - **Sub-region:** its own entity/level in the hierarchy. Details (fields, whether every region has one) to be specified later. (2026-10-25)
 - **Local dev in Docker:** `docker compose up --watch` (Compose Watch syncs saved files into containers; plain bind mounts miss Windows file events). Host `pnpm dev` stays optional. (2026-10-25)
 - **Local S3 stand-in:** deferred until the files module. MinIO no longer publishes images; RustFS is the likely replacement. Production uses Amazon S3. (2026-10-25)
+- **API docs:** Swagger UI at `/api/docs`, generated from the shared Zod schemas. Docs live in `backend/src/docs/` (one `paths/<module>.paths.ts` per module), not in route files. On by default except in production; `API_DOCS_ENABLED` overrides (e.g. staging). (2026-10-25)
+- **Backend versions:** Express 5, Prisma 7 (driver adapter `@prisma/adapter-pg`, client generated to `src/generated/`), BullMQ 6 + ioredis 6, Zod 4. (2026-10-25)
 
 ## Open
 
 - **AWS region** for data hosting — finalise before first deploy; depends on where most users are and the MoU 6.6 privacy review.
 - **Sub-region details** — required vs optional level under a region.
+- **Security follow-ups from the S3 review** (deferred to the slice that introduces the dependency):
+  - Reverse proxy: always set `X-Request-Id` itself; expose only `/healthz` publicly (keep `/readyz` internal); `app.set("trust proxy", 1)` before rate limiting.
+  - Auth: put `/api/docs` behind an admin session (or proxy IP allowlist) when enabled on staging.
+  - Before production: Redis ACL user for BullMQ with dangerous commands disabled; `rds.force_ssl=1` on RDS.

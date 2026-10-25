@@ -31,5 +31,38 @@ services:
       timeout: 5s
       retries: 10
 
+  # REST API. Local: dev target with live reload (override). Server: runtime target (S5).
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    restart: unless-stopped
+    environment: &backend-env
+      PORT: "4000"
+      DATABASE_URL: ${DATABASE_URL:?set DATABASE_URL in .env}
+      REDIS_URL: redis://:${REDIS_PASSWORD:?set REDIS_PASSWORD in .env}@redis:6379
+      API_DOCS_ENABLED: ${API_DOCS_ENABLED:-}
+      LOG_LEVEL: ${LOG_LEVEL:-}
+    depends_on:
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:4000/healthz"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  # BullMQ jobs. Same image as backend, different entrypoint; scales separately.
+  worker:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    restart: unless-stopped
+    environment: *backend-env
+    depends_on:
+      redis:
+        condition: service_healthy
+
 volumes:
   redis-data:

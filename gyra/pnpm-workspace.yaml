@@ -3,3 +3,11 @@ packages:
   - backend
   - shared
   - e2e
+
+# Dependencies allowed to run install scripts (pnpm blocks all others).
+allowBuilds:
+  "@prisma/engines": true
+  "@scarf/scarf": false # install-time usage telemetry from swagger-ui-dist
+  esbuild: true
+  msgpackr-extract: true
+  prisma: true

@@ -148,6 +148,7 @@ Uses [Compose Watch](https://docs.docker.com/compose/how-tos/file-watch/) instea
 Database and Redis data live in named volumes and survive restarts.
 
 - App: http://localhost:3000
+- API: http://localhost:4000 — Swagger UI at http://localhost:4000/api/docs
 - Mailpit (see sent emails): http://localhost:8025
 
 If a host port is already taken (e.g. a Redis running in WSL), change it in `.env` (`REDIS_PORT=6380`); containers still talk to each other on the default ports.
@@ -270,6 +271,11 @@ The repository root holds project notes only; all code is inside `gyra/`.
     │   │   ├── app.ts                    builds the Express app (used by server + tests)
     │   │   ├── routes.ts                 mounts all module routers under /api/v1
     │   │   ├── config/env.ts             Zod-validated environment variables
+    │   │   ├── docs/                     Swagger/OpenAPI only (kept out of route files)
+    │   │   │   ├── openapi.ts            assembles the document
+    │   │   │   ├── components.ts         shared schemas + standard error responses
+    │   │   │   ├── paths/                one <module>.paths.ts per module
+    │   │   │   └── docs.router.ts        /api/docs (UI) + /api/docs/openapi.json
     │   │   ├── core/                     cross-cutting infrastructure
     │   │   │   ├── auth/                 Better Auth instance + session middleware
     │   │   │   ├── authz/                AccessScope resolver, authorize() middleware

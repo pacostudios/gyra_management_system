@@ -1,0 +1,11 @@
+// Models are added per module, each through a migration (see docs/specs/).
+
+generator client {
+  provider     = "prisma-client"
+  output       = "../src/generated/prisma"
+  moduleFormat = "esm"
+}
+
+datasource db {
+  provider = "postgresql"
+}
